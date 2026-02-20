@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      padding: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #333;
+      text-align: left;
+    }
+
+    th {
+      background: #222;
+    }
+
+    tr:hover {
+      background: #1a1a1a;
+    }
+
+    .pending {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .approved {
+      color: lime;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 6px 12px;
+      border: none;
+      background: #00aa00;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #00cc00;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Admin - รายการเติมเงิน</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>ยอดที่โอน</th>
+        <th>สถานะ</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="orderTable"></tbody>
+  </table>
+
+  <script>
+    async function loadOrders() {
+      const res = await fetch("/orders");
+      const data = await res.json();
+
+      const table = document.getElementById("orderTable");
+      table.innerHTML = "";
+
+      data.forEach(order => {
+        const row = `
+          <tr>
+            <td>${order.email}</td>
+            <td>${order.finalAmount} บาท</td>
+            <td class="${order.status}">${order.status}</td>
+            <td>
+              ${
+                order.status === "pending"
+                  ? `<button onclick="approveOrder('${order._id}')">อนุมัติ</button>`
+                  : "✔"
+              }
+            </td>
+          </tr>
+        `;
+        table.innerHTML += row;
+      });
+    }
+
+    async function approveOrder(id) {
+      await fetch("/approve/" + id, {
+        method: "POST"
+      });
+      loadOrders();
+    }
+
+    loadOrders();
+  </script>
+
+</body>
+</html>

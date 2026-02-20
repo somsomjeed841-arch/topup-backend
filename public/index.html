@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Topup System</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      background: #00aa00;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00cc00;
+    }
+
+    img {
+      margin-top: 20px;
+    }
+
+    #slipSection {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>เติมเงิน</h2>
+
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="number" id="amount" placeholder="จำนวนเงิน"><br>
+  <button onclick="createOrder()">สร้าง QR</button>
+
+  <div id="qrSection"></div>
+
+  <div id="slipSection">
+    <h3>อัปโหลดสลิปหลังโอน</h3>
+    <input type="file" id="slipFile"><br>
+    <button onclick="uploadSlip()">อัปโหลดสลิป</button>
+  </div>
+
+<script>
+let currentOrderId = null;
+
+async function createOrder() {
+  const email = document.getElementById("email").value;
+  const amount = document.getElementById("amount").value;
+
+  const res = await fetch("/create-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, amount })
+  });
+
+  const data = await res.json();
+
+  currentOrderId = data.order._id;
+
+  document.getElementById("qrSection").innerHTML = `
+    <h3>โอนจำนวน ${data.order.finalAmount} บาท</h3>
+    <img src="${data.qrCode}" width="250"><br>
+  `;
+
+  document.getElementById("slipSection").style.display = "block";
+}
+
+async function uploadSlip() {
+  const fileInput = document.getElementById("slipFile");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("กรุณาเลือกไฟล์สลิป");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("slip", file);
+
+  await fetch("/upload-slip/" + currentOrderId, {
+    method: "POST",
+    body: formData
+  });
+
+  alert("อัปโหลดสลิปสำเร็จ รอแอดมินตรวจสอบ");
+}
+</script>
+
+<script>
+function buyItem(price) {
+  fetch("http://localhost:3000/buy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "test@gmail.com",
+      price: price
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+  });
+}
+</script>
+
+</body>
+</html>

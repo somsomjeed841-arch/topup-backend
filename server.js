@@ -5,12 +5,17 @@ const QRCode = require("qrcode");
 const generatePayload = require("promptpay-qr");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 // ===== เชื่อม MongoDB =====
 mongoose.connect(process.env.MONGO_URI)

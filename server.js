@@ -4,8 +4,9 @@ const cors = require("cors");
 const QRCode = require("qrcode");
 const generatePayload = require("promptpay-qr");
 const multer = require("multer");
-const path = require("path");
+const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
@@ -13,16 +14,14 @@ app.use(express.json());
 app.use(express.static("public"));
 
 /* =========================
-   FIX: สร้างโฟลเดอร์ uploads ให้แน่ใจว่ามี
+   Cloudinary Config
 ========================= */
 
-const uploadDir = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-app.use("/uploads", express.static(uploadDir));
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME=soomjeed,
+  api_key: process.env.CLOUD_API_KEY=372972935332658,
+  api_secret: process.env.CLOUD_API_SECRET=g0TZLImDkhYbCL9aq5xC5OVWpXA
+});
 
 /* =========================
    เชื่อม MongoDB
@@ -33,19 +32,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log(err));
 
 /* =========================
-   ตั้งค่า Upload
+   ตั้งค่า Upload (Temporary)
 ========================= */
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir); // ใช้ตัวแปรที่ประกาศแล้ว
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage });
+const upload = multer({ dest: "temp/" });
 
 /* =========================
    Schema User
@@ -67,7 +57,7 @@ const orderSchema = new mongoose.Schema({
   originalAmount: Number,
   finalAmount: Number,
   status: { type: String, default: "pending" },
-  slip: String,
+  slip: String, // จะเก็บ URL จาก Cloudinary
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -113,9 +103,8 @@ app.post("/create-order", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 /* =========================
-   อัปโหลดสลิป
+   อัปโหลดสลิป → Cloudinary
 ========================= */
 
 app.post("/upload-slip/:id", upload.single("slip"), async (req, res) => {
@@ -127,7 +116,13 @@ app.post("/upload-slip/:id", upload.single("slip"), async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    order.slip = req.file.filename;
+    // อัปขึ้น Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path);
+
+    // ลบไฟล์ temp ทิ้ง
+    fs.unlinkSync(req.file.path);
+
+    order.slip = result.secure_url; // เก็บ URL ถาวร
     await order.save();
 
     res.json({ message: "Slip uploaded" });

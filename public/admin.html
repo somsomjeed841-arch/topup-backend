@@ -1,120 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel</title>
+  <title>Admin Login</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 20px;
+      font-family: Arial;
+      background:#f4f6f9;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
-
-    h1 {
-      text-align: center;
+    .box {
+      background:white;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 4px 15px rgba(0,0,0,0.1);
+      text-align:center;
     }
-
-    .card {
-      background: white;
-      padding: 20px;
-      margin: 15px auto;
-      border-radius: 12px;
-      max-width: 600px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    input {
+      padding:10px;
+      margin:10px 0;
+      width:200px;
     }
-
-    .status-pending {
-      color: orange;
-      font-weight: bold;
-    }
-
-    .status-approved {
-      color: green;
-      font-weight: bold;
-    }
-
     button {
-      padding: 8px 15px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-right: 10px;
-      font-weight: bold;
-    }
-
-    .btn-slip {
-      background: #3498db;
-      color: white;
-    }
-
-    .btn-approve {
-      background: #2ecc71;
-      color: white;
-    }
-
-    .btn-slip:hover {
-      background: #2980b9;
-    }
-
-    .btn-approve:hover {
-      background: #27ae60;
+      padding:10px 20px;
+      border:none;
+      background:#2ecc71;
+      color:white;
+      border-radius:8px;
+      cursor:pointer;
     }
   </style>
 </head>
 <body>
 
-<h1>💰 ระบบแอดมิน - รายการเติมเงิน</h1>
-<div id="orders"></div>
+<div class="box" id="loginBox">
+  <h2>🔐 Admin Login</h2>
+  <input type="password" id="password" placeholder="Enter password">
+  <br>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="adminPanel" style="display:none; padding:20px;">
+  <h1>📊 Dashboard</h1>
+  <div id="summary"></div>
+  <div id="orders"></div>
+</div>
 
 <script>
-const BASE_URL = "https://topup-backend-1egx.onrender.com"; // 🔴 เปลี่ยนเป็นของคุณ
+const BASE_URL = "https://YOUR-BACKEND.onrender.com";
+const ADMIN_PASSWORD = "1234"; // 🔴 เปลี่ยนรหัสตรงนี้
 
-async function loadOrders() {
+function login(){
+  const pass = document.getElementById("password").value;
+  if(pass === ADMIN_PASSWORD){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("adminPanel").style.display="block";
+    loadOrders();
+  } else {
+    alert("รหัสผิด");
+  }
+}
+
+async function loadOrders(){
   const res = await fetch(BASE_URL + "/orders");
   const orders = await res.json();
 
+  let total = 0;
+  let pending = 0;
+  let today = 0;
+
+  const todayDate = new Date().toDateString();
+
+  orders.forEach(o=>{
+    if(o.status==="approved"){
+      total += o.originalAmount;
+    }
+    if(o.status==="pending"){
+      pending++;
+    }
+    if(new Date(o.createdAt).toDateString()===todayDate){
+      today += o.originalAmount;
+    }
+  });
+
+  document.getElementById("summary").innerHTML = `
+    <p>💰 ยอดรวมทั้งหมด: ${total} บาท</p>
+    <p>⏳ รออนุมัติ: ${pending} รายการ</p>
+    <p>📅 ยอดวันนี้: ${today} บาท</p>
+    <hr>
+  `;
+
   const container = document.getElementById("orders");
-  container.innerHTML = "";
+  container.innerHTML="";
 
-  orders.forEach(order => {
+  orders.forEach(order=>{
     container.innerHTML += `
-      <div class="card">
-        <p><b>Email:</b> ${order.email}</p>
-        <p><b>ยอดเติม:</b> ${order.originalAmount} บาท</p>
-        <p><b>สถานะ:</b> 
-          <span class="${order.status === "approved" ? "status-approved" : "status-pending"}">
-            ${order.status}
-          </span>
-        </p>
-
-        ${order.slip ? 
-          `<button class="btn-slip" onclick="viewSlip('${order.slip}')">ดูสลิป</button>` 
-          : `<p style="color:red;">ยังไม่มีสลิป</p>`
-        }
-
-        ${order.status === "pending" ? 
-          `<button class="btn-approve" onclick="approve('${order._id}')">อนุมัติ</button>` 
-          : ""
-        }
+      <div style="background:white;padding:15px;margin:10px 0;border-radius:10px;">
+        <p>Email: ${order.email}</p>
+        <p>ยอด: ${order.originalAmount}</p>
+        <p>สถานะ: ${order.status}</p>
+        ${order.slip ? `<button onclick="window.open('${BASE_URL}/uploads/${order.slip}')">ดูสลิป</button>` : ""}
+        ${order.status==="pending" ? `<button onclick="approve('${order._id}')">อนุมัติ</button>` : ""}
       </div>
     `;
   });
 }
 
-function viewSlip(filename) {
-  window.open(BASE_URL + "/uploads/" + filename, "_blank");
-}
-
-async function approve(id) {
-  await fetch(BASE_URL + "/approve/" + id, {
-    method: "POST"
-  });
-
-  alert("อนุมัติเรียบร้อย");
+async function approve(id){
+  await fetch(BASE_URL + "/approve/" + id, {method:"POST"});
   loadOrders();
 }
-
-loadOrders();
 </script>
 
 </body>

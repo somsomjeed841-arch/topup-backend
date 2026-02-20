@@ -6,11 +6,16 @@
     body {
       font-family: Arial;
       background:#f4f6f9;
+      margin:0;
+    }
+
+    .center {
       display:flex;
       justify-content:center;
       align-items:center;
       height:100vh;
     }
+
     .box {
       background:white;
       padding:30px;
@@ -18,49 +23,90 @@
       box-shadow:0 4px 15px rgba(0,0,0,0.1);
       text-align:center;
     }
+
     input {
       padding:10px;
       margin:10px 0;
-      width:200px;
+      width:220px;
     }
+
     button {
-      padding:10px 20px;
+      padding:8px 14px;
       border:none;
       background:#2ecc71;
       color:white;
       border-radius:8px;
       cursor:pointer;
+      margin:4px;
+    }
+
+    .logout {
+      background:#e74c3c;
+    }
+
+    .card {
+      background:white;
+      padding:15px;
+      margin:10px 0;
+      border-radius:10px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    #adminPanel{
+      padding:20px;
+      max-width:800px;
+      margin:auto;
     }
   </style>
 </head>
 <body>
 
-<div class="box" id="loginBox">
-  <h2>🔐 Admin Login</h2>
-  <input type="password" id="password" placeholder="Enter password">
-  <br>
-  <button onclick="login()">Login</button>
+<div class="center" id="loginBox">
+  <div class="box">
+    <h2>🔐 Admin Login</h2>
+    <input type="password" id="password" placeholder="Enter password">
+    <br>
+    <button type="button" onclick="login()">Login</button>
+  </div>
 </div>
 
-<div id="adminPanel" style="display:none; padding:20px;">
+<div id="adminPanel" style="display:none;">
   <h1>📊 Dashboard</h1>
+  <button class="logout" onclick="logout()">Logout</button>
   <div id="summary"></div>
   <div id="orders"></div>
 </div>
 
 <script>
 const BASE_URL = "https://topup-backend-1egx.onrender.com";
-const ADMIN_PASSWORD = "Aa0819775223"; // 🔴 เปลี่ยนรหัสตรงนี้
+const ADMIN_PASSWORD = "Aa0819775223";
+
+// 🔐 เช็คตอนโหลดหน้า
+window.onload = function(){
+  if(localStorage.getItem("adminLoggedIn")==="true"){
+    showAdmin();
+  }
+};
 
 function login(){
   const pass = document.getElementById("password").value;
   if(pass === ADMIN_PASSWORD){
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("adminPanel").style.display="block";
-    loadOrders();
+    localStorage.setItem("adminLoggedIn","true");
+    showAdmin();
   } else {
     alert("รหัสผิด");
   }
+}
+
+function logout(){
+  localStorage.removeItem("adminLoggedIn");
+  location.reload();
+}
+
+function showAdmin(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
+  loadOrders();
 }
 
 async function loadOrders(){
@@ -70,7 +116,6 @@ async function loadOrders(){
   let total = 0;
   let pending = 0;
   let today = 0;
-
   const todayDate = new Date().toDateString();
 
   orders.forEach(o=>{
@@ -97,12 +142,18 @@ async function loadOrders(){
 
   orders.forEach(order=>{
     container.innerHTML += `
-      <div style="background:white;padding:15px;margin:10px 0;border-radius:10px;">
-        <p>Email: ${order.email}</p>
-        <p>ยอด: ${order.originalAmount}</p>
-        <p>สถานะ: ${order.status}</p>
-        ${order.slip ? `<button onclick="window.open('${BASE_URL}/uploads/${order.slip}')">ดูสลิป</button>` : ""}
-        ${order.status==="pending" ? `<button onclick="approve('${order._id}')">อนุมัติ</button>` : ""}
+      <div class="card">
+        <p><b>Email:</b> ${order.email}</p>
+        <p><b>ยอด:</b> ${order.originalAmount}</p>
+        <p><b>สถานะ:</b> ${order.status}</p>
+
+        ${order.slip ? 
+          `<button type="button" onclick="window.open('${BASE_URL}/uploads/${order.slip}')">ดูสลิป</button>` 
+          : ""}
+
+        ${order.status==="pending" ? 
+          `<button type="button" onclick="approve('${order._id}')">อนุมัติ</button>` 
+          : ""}
       </div>
     `;
   });
@@ -110,7 +161,7 @@ async function loadOrders(){
 
 async function approve(id){
   await fetch(BASE_URL + "/approve/" + id, {method:"POST"});
-  loadOrders();
+  loadOrders(); // รีโหลดข้อมูล แต่ไม่รีโหลดหน้า
 }
 </script>
 

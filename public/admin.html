@@ -54,58 +54,58 @@
     }
   </style>
 </head>
+
 <body>
 
-  <h2>Admin - รายการเติมเงิน</h2>
+<h1>ระบบแอดมิน - รายการเติมเงิน</h1>
+<div id="orders"></div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>ยอดที่โอน</th>
-        <th>สถานะ</th>
-        <th>จัดการ</th>
-      </tr>
-    </thead>
-    <tbody id="orderTable"></tbody>
-  </table>
+<script>
+const BASE_URL = "https://topup-backend-xxxx.onrender.com"; // 🔴 เปลี่ยนเป็นของคุณ
 
-  <script>
-    async function loadOrders() {
-      const res = await fetch("/orders");
-      const data = await res.json();
+async function loadOrders() {
+  const res = await fetch(BASE_URL + "/orders");
+  const orders = await res.json();
 
-      const table = document.getElementById("orderTable");
-      table.innerHTML = "";
+  const container = document.getElementById("orders");
+  container.innerHTML = "";
 
-      data.forEach(order => {
-        const row = `
-          <tr>
-            <td>${order.email}</td>
-            <td>${order.finalAmount} บาท</td>
-            <td class="${order.status}">${order.status}</td>
-            <td>
-              ${
-                order.status === "pending"
-                  ? `<button onclick="approveOrder('${order._id}')">อนุมัติ</button>`
-                  : "✔"
-              }
-            </td>
-          </tr>
-        `;
-        table.innerHTML += row;
-      });
-    }
+  orders.forEach(order => {
+    container.innerHTML += `
+      <div style="border:1px solid black; padding:10px; margin:10px;">
+        <p><b>Email:</b> ${order.email}</p>
+        <p><b>ยอดเติม:</b> ${order.originalAmount} บาท</p>
+        <p><b>สถานะ:</b> ${order.status}</p>
 
-    async function approveOrder(id) {
-      await fetch("/approve/" + id, {
-        method: "POST"
-      });
-      loadOrders();
-    }
+        ${order.slip ? 
+          `<button onclick="viewSlip('${order.slip}')">ดูสลิป</button>` 
+          : `<p style="color:red;">ยังไม่มีสลิป</p>`
+        }
 
-    loadOrders();
-  </script>
+        ${order.status === "pending" ? 
+          `<br><br><button onclick="approve('${order._id}')">อนุมัติ</button>` 
+          : `<p style="color:green;">อนุมัติแล้ว</p>`
+        }
+      </div>
+    `;
+  });
+}
+
+function viewSlip(filename) {
+  window.open(BASE_URL + "/uploads/" + filename, "_blank");
+}
+
+async function approve(id) {
+  await fetch(BASE_URL + "/approve/" + id, {
+    method: "POST"
+  });
+
+  alert("อนุมัติเรียบร้อย");
+  loadOrders();
+}
+
+loadOrders();
+</script>
 
 </body>
 </html>

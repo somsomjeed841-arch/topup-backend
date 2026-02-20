@@ -6,7 +6,6 @@ const generatePayload = require("promptpay-qr");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
-require("dotenv").config();
 
 const app = express();
 app.use(cors());

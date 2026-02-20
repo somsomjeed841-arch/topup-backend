@@ -102,7 +102,7 @@ async function uploadSlip() {
 
 <script>
 function buyItem(price) {
-  fetch("http://localhost:3000/buy", {
+  fetch("https://topup-backend-1egx.onrender.com", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -4,60 +4,66 @@
   <title>Admin Panel</title>
   <style>
     body {
-      font-family: Arial;
-      background: #111;
-      color: white;
-      padding: 30px;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+    h1 {
+      text-align: center;
     }
 
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #333;
-      text-align: left;
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      border-radius: 12px;
+      max-width: 600px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    th {
-      background: #222;
-    }
-
-    tr:hover {
-      background: #1a1a1a;
-    }
-
-    .pending {
+    .status-pending {
       color: orange;
       font-weight: bold;
     }
 
-    .approved {
-      color: lime;
+    .status-approved {
+      color: green;
       font-weight: bold;
     }
 
     button {
-      padding: 6px 12px;
+      padding: 8px 15px;
       border: none;
-      background: #00aa00;
-      color: white;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 4px;
+      margin-right: 10px;
+      font-weight: bold;
     }
 
-    button:hover {
-      background: #00cc00;
+    .btn-slip {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-approve {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .btn-slip:hover {
+      background: #2980b9;
+    }
+
+    .btn-approve:hover {
+      background: #27ae60;
     }
   </style>
 </head>
-
 <body>
 
-<h1>ระบบแอดมิน - รายการเติมเงิน</h1>
+<h1>💰 ระบบแอดมิน - รายการเติมเงิน</h1>
 <div id="orders"></div>
 
 <script>
@@ -72,19 +78,23 @@ async function loadOrders() {
 
   orders.forEach(order => {
     container.innerHTML += `
-      <div style="border:1px solid black; padding:10px; margin:10px;">
+      <div class="card">
         <p><b>Email:</b> ${order.email}</p>
         <p><b>ยอดเติม:</b> ${order.originalAmount} บาท</p>
-        <p><b>สถานะ:</b> ${order.status}</p>
+        <p><b>สถานะ:</b> 
+          <span class="${order.status === "approved" ? "status-approved" : "status-pending"}">
+            ${order.status}
+          </span>
+        </p>
 
         ${order.slip ? 
-          `<button onclick="viewSlip('${order.slip}')">ดูสลิป</button>` 
+          `<button class="btn-slip" onclick="viewSlip('${order.slip}')">ดูสลิป</button>` 
           : `<p style="color:red;">ยังไม่มีสลิป</p>`
         }
 
         ${order.status === "pending" ? 
-          `<br><br><button onclick="approve('${order._id}')">อนุมัติ</button>` 
-          : `<p style="color:green;">อนุมัติแล้ว</p>`
+          `<button class="btn-approve" onclick="approve('${order._id}')">อนุมัติ</button>` 
+          : ""
         }
       </div>
     `;

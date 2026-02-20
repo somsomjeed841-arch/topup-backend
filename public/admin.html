@@ -148,8 +148,8 @@ async function loadOrders(){
         <p><b>สถานะ:</b> ${order.status}</p>
 
         ${order.slip ? 
-          `<button type="button" onclick="window.open('${BASE_URL}/uploads/${order.slip}')">ดูสลิป</button>` 
-          : ""}
+  `<button type="button" onclick="window.open('${order.slip}')">ดูสลิป</button>` 
+  : ""}
 
         ${order.status==="pending" ? 
           `<button type="button" onclick="approve('${order._id}')">อนุมัติ</button>` 

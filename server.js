@@ -17,9 +17,9 @@ app.use(express.static("public"));
 ========================= */
 
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME=soomjeed,
-  api_key: process.env.CLOUD_API_KEY=372972935332658,
-  api_secret: process.env.CLOUD_API_SECRET=g0TZLImDkhYbCL9aq5xC5OVWpXA
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET
 });
 
 /* =========================
